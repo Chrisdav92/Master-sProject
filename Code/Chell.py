@@ -17,6 +17,7 @@
 # I must use the sensors to move the robot then figure when to stop. This allows for better responsiveness to the spirte as well
 #These are the imports for the pygame library
 #------(11/5/16) - exported player and tile classes to their own file to improve on easibility, as well as create an abstract entity class file
+#------(11/10/16) - Got the pi2go library to work! Now figuring out to do movement
 import os,sys
 #import pi2go
 import pygame
