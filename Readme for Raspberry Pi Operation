@@ -1,0 +1,31 @@
+Readme for Raspberry Pi 
+
+#----------------REMOTE INTO PI------------------------#
+#----------------FIND IP------------------------#
+
+To find IP of pi you'll need to either ping the pi with command "ping GLaDOS" on command line on another computer, make sure it's on the same network as pi.
+If that fails you'll need to hook the pi up to a monitor along with a keyboard and mouse
+then enter login credentials
+
+#----------------LOGIN------------------------#
+
+Log in with username: pi, password: StR0se 
+
+#----------------FINDING IP (DISREGARD IF ALREAD FOUND)------------------------#
+If you've hooked up the decive and once you are in open up the terminal on the left hand side. Enter this command "sudo ifconfig", this command will then let you view the currently connected wifi, on the St.Rose network we needed to connect to the gameconsole network (date of time of this is 12/18/2016) this may change in the future. Make sure the wLan0 or 1 is currently connected to the Gameconsole network. This is done by simply clicking on the designated SSID (Wifi name). 
+
+#----------------PLAYING AROUND------------------------#
+Once you have found the IP, remote into the PI! I would advise to use putty for some command line controls, winSCP for a much better coding experience and in my experience I had to use RealVNC. 
+
+#----------------RealVNC------------------------#
+Download onto device you plan to use for the PI, so your personal laptop. Once that is done ssh into your pi via putty. 
+Next type in the command vncserver, this allows your pi to be remoted into by the program RealVNC. 
+In RealVNC simply type in the IP of the pi and wait for a success prompt to show. If it is not working and you have already remoted in before use the command vncserver -kill :1
+(replace 1 with number that may of been used) Sometimes the server gets hung up on the network thus causing a breif moment in which the connection is severed, so you need to kill the process ID and start again
+
+#----------------ISSUES------------------------#
+Left motor is roughly getting more power than right, note this is becuase I needed to fix right motor.
+May find that batteries are an issue so I would recommend obtaining re-chargable or find some cheap yet good batteries as cheap batteries tend to not power the pi at all (Note the pi needs 4.6V to stay on!)
+
+#----------------Ending------------------------#
+I hope you find this program and robot fun! Alot of work,sweat and tears were shed in the building of this project. If you have any concerns or issues feel free to contact me!
