@@ -1,0 +1,16 @@
+\select@language {english}
+\contentsline {section}{\numberline {1}Proposal}{2}
+\contentsline {subsection}{\numberline {1.1}Comments about proposal after completion of Project}{2}
+\contentsline {section}{\numberline {2}Plan of Study}{3}
+\contentsline {subsection}{\numberline {2.1}Gannt Graph}{3}
+\contentsline {section}{\numberline {3}Working though the Project}{4}
+\contentsline {subsection}{\numberline {3.1}September}{4}
+\contentsline {subparagraph}{Issues in September}{4}
+\contentsline {subsection}{\numberline {3.2}October}{4}
+\contentsline {subparagraph}{Issues in October}{4}
+\contentsline {subsection}{\numberline {3.3}November}{5}
+\contentsline {subparagraph}{Issues in November}{5}
+\contentsline {subsection}{\numberline {3.4}December}{5}
+\contentsline {subparagraph}{Issues in December}{5}
+\contentsline {subsection}{\numberline {3.5}Finale}{6}
+\contentsline {section}{\numberline {4}Conclusion}{6}

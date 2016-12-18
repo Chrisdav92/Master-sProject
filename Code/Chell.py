@@ -3,29 +3,32 @@
 #This is the overall program for my Master's project robot game
 #It will be a labyrinth type game with a game screen that has time,score, button (but also take in keyboard)
 #As well as have a function to allow camera feed
-#V1 --- (10/12/16)- Inital imports done, made skel
+#------ (10/12/16)- Inital imports done, made skel
 #       (10/17/16)- Was sick so not too much done
 #       (10/21/16)-Worked on getting window up with map layout. Used some open source code for map creation and editing
 #                 -Added a player sprite for the game as well as worked on map
 #                 -encountering issue being able to use pi2go library will be needing to work on that!! Need to comment out calls
 #                 -able to get sprite to respond to arrow keys
-#------(10/23/16) -noticed that ConfigParser is for pyth v2 so it may be a issue later
+#------(10/23/16) -noticed that ConfigParser is for pyth v2 so it may be a issue later((11/3/16) NOT DOING THIS ANYMORE)
 #                 -added pi2go function call to moving robot in the directional call
 #------(11/1/16) - editted some functions, may need to re do movement key as pi2go lib still not being reached
-#------(11/3/16) - Re-did entire program as I was running into too many issues dealign with sprite animations and updating. reverting to simplier layout, I
-# will try to model it off of paceman as it is more tiled based and now dealing with a static spirte may help. Also I figure to correctly rotate the robot
-# I must use the sensors to move the robot then figure when to stop. This allows for better responsiveness to the spirte as well
-#------(11/5/16) - exported player and tile classes to their own file to improve on easibility, as well as create an abstract entity class file
+#------(11/3/16) - Re-did entire program as I was running into too many issues dealign with sprite animations and updating. reverting to simplier layout, I figure to correctly rotate the robot
+# I must use the sensors to move the robot then figure when to stop. This allows for better responsiveness to the spirte as well 
+#---------((11/15/16)****NOT USING SENSORS-- I figured since it's based on light amount I may have not enough ample light in presentaiton room)
 #------(11/10/16) - Got the pi2go library to work! Now figuring out to do movement
 #------(11/12/16) -- Introduced maze generation for the maze, based on size of screen. Also will check to see if it blocks anyother ones.
 #------(11/14/16) -- Got the maze to work, added player position and goal.
 #------(11/15/16) -- Included motor movement but having issue with quitting game correctly after goal has been reached.
+#------(11/20/16) -- Started on direction based movement for robot, also figuring out correct amount of time needed for robot to accuratly move 1 space 
+#------(11/25/16) -- Motor controls work and now after combining both programs (Motor.py and Chell.py) Noticed it didn't work.
+#------(12/05/16) -- Worked further on combining both programs, had to re-write motor methods into boolean values
+#------(12/08/16) --Worked with vaules of speed,delay and amount per. BUT FINISHED!!!
 
 #These are the imports for the library
-import os.path,sys
-#import pi2go
+import os.path,sys,tty,termios
+import pi2go
 import pygame
-
+import time
 sys.setrecursionlimit(10000) 
 from pygame.locals import *
 pygame.init()
@@ -33,21 +36,23 @@ fpsClock = pygame.time.Clock()
 
 # =================VARIABLES================================================
 # Constants
-mazeWidth = 21
-mazeHeight = 20
+mazeWidth = 15
+mazeHeight = 15
 u = pixelUnit = 30
 windowWidth = mazeWidth * pixelUnit
 windowHeight = mazeHeight * pixelUnit
 walk_cooldown = 0
-WALK_DELAY = 1
+WALK_DELAY = 4
 # Maze is a 2D array of integers
 maze = {}
 
 # Maze variables - used for generation
 primes = [37,73,43,47,2,83,7,89,41,17,67,71,101,97,3,19,61,5,11,23,53,59,29,13,79,31,103]
 numbers = [3755,8187,7883,9111,2503,5838,9544,1001,2246,1840,1160,1069,9369,9540,3213]
+
+#Had Idea for multiple levels here
 level = 1
-seed = 0
+seed = fpsClock
 seedPlus = 0
 
 # Corner variables - gameplay
@@ -70,6 +75,15 @@ blackColor = pygame.Color(0,0,0)
 redColor = pygame.Color(255,0,0)
 greenColor = pygame.Color(0,240,0)
 
+# =================Global direction variables ========================================
+
+global down,left,right,up
+down = left = right = up = False
+# =================IMPORTANT MUST CHANGE THIS IN CONJUCTION TO NEW HEADING ========================================
+global northBool, westBool, eastBool, southBool
+northBool = westBool = eastBool = False
+southBool = True #Means South is the Current heading
+
 def minit():
         global minutes, seconds
         minutes = seconds  = 0
@@ -89,7 +103,7 @@ def drawMaze():
                 for y in range(0, mazeHeight):
                         if maze[x,y] == 1:
                                 drawSquare(x,y,blackColor)
-
+#For time to be displayed
 def updateText():
         global minutes, seconds, frames
         timemsg = ' - Time:'+str(minutes)+'m'+str(seconds)+'s'
@@ -98,7 +112,7 @@ def updateText():
         msg = 'PyMaze - '+playerName
         pygame.display.set_caption(msg)
 
-# Draw maze, objectives and player. Update score display
+# Draw maze, objectives and player. 
 def drawScene():
         global minutes, seconds, frames
         frames += 1
@@ -242,7 +256,12 @@ def generate():
                         if(x > 3 and (x+(4*y/3))%space == 0):
                                 for y3 in range(y, y+mazeHeight/3):
                                         cellGen(x, y3)
+# =================Exiting Game=========================
 
+def exitPyMaze():
+        pygame.quit()
+        pi2go.stop()
+        sys.exit()
 # =================Player Methods======================
 
 # Moves player by (x*unit, y*unit)
@@ -263,7 +282,7 @@ def playerMove(x,y):
                 if(checksc[i] == c and checks[i] == 0):
                         checks[i] = 1
                         if(checks[0] == 1):
-                            pygame.quit()       
+                            exitPyMaze()       
                         return
                         
 # Move player based on keyboard input
@@ -276,12 +295,6 @@ def movement():
                 playerMove(0,1)
         if kRight:
                 playerMove(1,0)
-
-# =================Exiting Game=========================
-
-def exitPyMaze():
-        pygame.quit()
-        sys.exit()
         
         
 def pad(s, n):
@@ -315,8 +328,143 @@ def setName():
         
         playerName = tempName
 
-# =================Main==================================
+# =================Robot movement methods====================
 
+speed = 30
+leftM = 23
+rightM = 20
+sleep = 1.5
+turningDelay= 2.0
+
+def moverThis():
+ global northBool, westBool, eastBool, southBool
+ # For north
+ if northBool & down:
+                pi2go.reverse(speed)
+                print 'Backward south', speed
+                time.sleep(sleep)
+                pi2go.stop()    
+ if northBool & left:
+                pi2go.spinLeft(speed)
+                print 'TURNING West LEFT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to WEST', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                northBool = False;
+                westBound = True;
+ if northBool & right:
+                pi2go.spinRight(speed)
+                print 'TURNING East RIGHT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to EAST', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                northBool = False;
+                eastBool = True;
+ if northBool & up:
+                pi2go.go(leftM,rightM)
+                print 'North Forward', speed
+                time.sleep(sleep)
+                pi2go.stop()
+# For East
+ if eastBool & down:
+                pi2go.spinRight(25)
+                print 'TURNING South RIGHT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to South', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                eastBool= False;
+                southBool= True;
+ if eastBool & left:
+                pi2go.reverse(speed)
+                print 'West Backward', speed
+                time.sleep(sleep)
+                pi2go.stop()  
+ if eastBool & right:
+                pi2go.go(leftM,rightM)
+                print 'East Forward', speed
+                time.sleep(sleep)
+                pi2go.stop()
+ if eastBool & up:
+                pi2go.spinLeft(speed)
+                print 'TURNING North LEFT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to North', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                eastBool= False;
+                northBool= True;              
+# For West
+ if westBool & down:
+                pi2go.spinLeft(speed)
+                print 'TURNING South LEFT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to South', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                westBool= False;
+                southBool= True;
+ if westBool & left:
+                pi2go.go(leftM,rightM)
+                print 'West Forward', speed
+                time.sleep(sleep)
+                pi2go.stop() 
+ if westBool & right:
+                pi2go.reverse(speed)
+                print 'West Backward', speed
+                time.sleep(sleep)
+                pi2go.stop() 
+ if westBool & up:
+                pi2go.spinLeft(speed)
+                print 'TURNING North RIGHT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to North', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                westBool= False;
+                NorthBool= True;  
+# For south
+ if southBool & down:
+                pi2go.go(leftM,rightM)
+                print 'South Forward', speed
+                time.sleep(sleep)
+                pi2go.stop()
+ if southBool & left:
+                pi2go.spinRight(speed)
+                print 'TURNING west Left', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to WEST', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                southBool= False;
+                westBool= True;
+ if southBool & right:
+                pi2go.spinLeft(speed)
+                print 'TURNING East LEFT', speed
+                time.sleep(turningDelay)
+                pi2go.go(leftM,rightM)
+                print 'Forward to EAST', speed
+                time.sleep(sleep)
+                pi2go.stop()
+                southBool= False;
+                eastBool= True;
+ if southBool & up:
+                pi2go.reverse(speed)
+                print 'South Backward', speed
+                time.sleep(sleep)
+                pi2go.stop()
+
+                
+# =================Main==================================
 minit()
 generate()
 pi2go.init()
@@ -331,43 +479,38 @@ while True:
                 events += 1
                 if event.type == QUIT:
                         exitPyMaze()
-                
                 elif event.type == KEYDOWN:
                         if event.key == K_UP:
-                                kUp = True
-                                movement()
+                                up = True
+                                moverThis()
+                                playerMove(0,-1)
                                 walk_cooldown = WALK_DELAY
-                                pi2go.forward(15)
-                                pi2go.stop
                         if event.key == K_LEFT:
-                                kLeft = True
-                                movement()
+                                left = True
+                                moverThis()
+                                playerMove(-1,0)
                                 walk_cooldown = WALK_DELAY
-                                pi2go.spinLeft(15)
-                                pi2go.stop
                         if event.key == K_DOWN:
-                                kDown = True
-                                movement()
+                                down = True
+                                moverThis()
+                                playerMove(0,1)
                                 walk_cooldown = WALK_DELAY
-                                pi2go.reverse(15)
-                                pi2go.stop
                         if event.key == K_RIGHT:
-                                kRight = True
-                                movement()
+                                right = True
+                                moverThis()
+                                playerMove(1,0)
                                 walk_cooldown = WALK_DELAY
-                                pi2go.spinRight(15)
-                                pi2go.stop
                         if event.key == K_ESCAPE:
                                 pygame.event.post(pygame.event.Event(QUIT))
                 elif event.type == KEYUP:
                         if event.key == K_UP:
-                                kUp = False
+                                up = False
                         if event.key == K_LEFT:
-                                kLeft = False
+                                left = False
                         if event.key == K_DOWN:
-                                kDown = False
+                                down = False
                         if event.key == K_RIGHT:
-                                kRight = False
+                                right = False
         #Drawing scene and updating window:
         if(events == 0):
                 movement()              
